@@ -16,10 +16,10 @@ addpath('./utils');
 
 %experiment arguments
 assess.dataset = '../Data/YaleB_32x32.mat'
-X = fea;
+load(assess.dataset);
+X = fea';
 label = gnd;
 clear fea,gnd;
-load(assess.dataset);
 assess.method ={ 'PCA-ITQ', 'LSH', 'BPBC'};%  '2DPCA', '2DLDA', '2DLDA-LDA', 'PCA', 'PCA-LDA', 'Euclidean Distance', 'PCAH',  'BDAH^0', 'BDAH', 'KSH', 'CBE-opt', 'CCA-ITQ'
 assess.num_methods = length(assess.method);
 assess.hbits = [16 25 64 100];
