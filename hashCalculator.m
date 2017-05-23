@@ -1,5 +1,5 @@
 function [Dhamm, training_time, coding_time, memory] = hashCalculator(param, method)
-% param.X, param.label, param.Groundtruth, bits, num_test
+% param.X, param.label, param.Groundtruth, bit, num_test
 % demo code for generating small code and evaluation
 % input X should be a n*d matrix, n is the number of images, d is dimension
 % ''method'' is the method used to generate small code
@@ -7,18 +7,48 @@ function [Dhamm, training_time, coding_time, memory] = hashCalculator(param, met
 num_train = param.num_train;
 num_test = param.num_test;
 [dim, num] = size(param.X);
-bits = param.bits;
+bit = param.bits;
 
 %several state of art methods
 switch(method)
-    
+    case 'BDAH'
+        addpath('./BDAH');
+        X_train = (param.X(:,1:num_train));
+        X_test = (param.X(:,num_train+1:end));
+        label = param.label;
+        n = param.n;
+        m = ceil(dim/n);
+        r = param.r;
+        clear param;
+        
+        %--center the data
+        tic;
+        [R, L] = iterative2DLDA(X_train, label(1:num_train),r,r,n,m);
+        Y1 = zeros(r*r, num_train);
+        for i=1:num_train
+            Y1(:,i) = reshape(L'*reshape(X_train(:,i),n,m)*R, r*r, 1);
+        end
+        [B, U] = ITQ(Y1', 50);
+        B1 =  compactbit(B);
+        training_time = toc
+
+        tic;
+        Y2 = zeros(r*r, num_test);
+        for i=1:num_test
+            Y2(:,i) = reshape(L'*reshape(X_test(:,i),n,m)*R, r*r, 1);
+        end
+        B2 = compactbit(Y2'*U>0);
+        coding_time = toc
+        memory = (length(L(:))+length(R(:))+length(U(:)))*8;
+        Dhamm = hammingDist(B2, B1);
+
      case 'LSH'
         X_train = (param.X(:,1:num_train));
         X_test = (param.X(:,num_train+1:end));
         clear param;
 
         tic;
-        W = randn(bits, dim);
+        W = randn(bit, dim);
         Y1 = (W*X_train>=0)';    %ԭ������Ļ�����ֵ��Ϊ0������0����Ϊ1��С��0����Ϊ0
         B1 = compactbit(Y1);
         training_time = toc
@@ -41,7 +71,7 @@ switch(method)
         
         % training
         tic;
-        [pc, l] = eigs(cov(X_train), bits);%��database�е���ݵ����Э�����Э������������ֽ��õ����ɷ�
+        [pc, l] = eigs(cov(X_train), bit);%��database�е���ݵ����Э�����Э������������ֽ��õ����ɷ�
         Y1 = X_train * pc;  %������ݵ������ɷ��Ͻ���ͶӰ
         [B, R] = ITQ(Y1, 50);   %50Ϊ������RΪ���50�κ�õ�����ת����
         B1 = compactbit(B);
@@ -61,7 +91,7 @@ switch(method)
     case 'Kernel-ITQ'
         addpath('./ITQ');
         tic;
-        [pc, l] = eigs(cov(param.KTrain), bits);%��database�е���ݵ����Э�����Э������������ֽ��õ����ɷ�
+        [pc, l] = eigs(cov(param.KTrain), bit);%��database�е���ݵ����Э�����Э������������ֽ��õ����ɷ�
         Y1 = param.KTrain * pc;  %������ݵ������ɷ��Ͻ���ͶӰ
         % ITQ
         [B, R] = ITQ(Y1, 50);   %50Ϊ������RΪ���50�κ�õ�����ת����
@@ -78,7 +108,7 @@ switch(method)
         
     case 'Kernel-LSH'
         tic;
-        W = randn(param.num_anchor, bits);
+        W = randn(param.num_anchor, bit);
         Y1 = (param.KTrain*W >= 0);    %ԭ������Ļ�����ֵ��Ϊ0������0����Ϊ1��С��0����Ϊ0
         B1 = compactbit(Y1);
         training_time = toc + param.anchor_traintime;
@@ -164,6 +194,7 @@ switch(method)
         Dhamm = hammingDist(B2, B1);
 
     case 'CCA-ITQ'
+        addpath('./CCA');
         X_train = (param.X(:,1:num_train))';
         X_test = (param.X(:,num_train+1:end))';
         label = param.label;
@@ -175,8 +206,10 @@ switch(method)
         for i=1:num_train
             YY(i,c(i)) = 1;
         end
-        bit1 = 40;
-        bit2 = bit-bit1;
+%         bit1 = 40;
+%         bit2 = bit-bit1;
+        bit1 = bit;
+        bit2 = 0;
         [eigenvector,r] = cca(X_train, YY, 0.0001); % this computes CCA projections
         eigenvector = eigenvector(:,1:bit1)*diag(r(1:bit1)); % this performs a scaling using eigenvalues
         Y1 = X_train*eigenvector; % final projection to otain embedding E
@@ -195,10 +228,16 @@ switch(method)
         Dhamm = hammingDist(B2, B1); 
  
     case 'KSH'
+        addpath('./KSH');
+        X_train = (param.X(:,1:num_train))';
+        X_test = (param.X(:,num_train+1:end))';
+        label = param.label;
+        clear param.label
+        
         tic;
         num_anchor = 300;
         sample = randperm(num_train, num_anchor);%300��anchor��
-        anchor = X(sample',:);
+        anchor = X_train(sample',:);
         KTrain = sqdist(X_train',anchor');
         sigma = mean(mean(KTrain,2));
         KTrain = exp(-KTrain/(2*sigma));

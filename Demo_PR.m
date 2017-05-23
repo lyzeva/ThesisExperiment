@@ -15,9 +15,9 @@ addpath('./utils');
 %        D:dimension of data
 
 %experiment arguments
-assess.dataset = '../Data/YaleB.mat'
+assess.dataset = '../Data/awa4096.mat'
 load(assess.dataset);
-assess.method ={ 'PCA-ITQ', 'LSH', 'BPBC'};%  '2DPCA', '2DLDA', '2DLDA-LDA', 'PCA', 'PCA-LDA', 'Euclidean Distance', 'PCAH',  'BDAH^0', 'BDAH', 'KSH', 'CBE-opt', 'CCA-ITQ'
+assess.method ={ 'BDAH', 'CCA-ITQ', 'LSH'};%  '2DPCA', '2DLDA', '2DLDA-LDA', 'PCA', 'PCA-LDA', 'Euclidean Distance', 'PCAH',  'BDAH^0', 'BDAH', 'KSH', 'CBE-opt', 'CCA-ITQ'
 assess.num_methods = length(assess.method);
 assess.hbits = [16 25 64 100];
 assess.intv = 1; assess.PRline =500;     %PR������ʾ����
@@ -34,9 +34,9 @@ for loop = 1:assess.loop
 
     disp('Calculate groundtruth...');
     assess.NN=20;
-    %assess.Groundtruth =  groundTruthOnLabel(assess.label(param.num_train+1:end),assess.label(1:param.num_train)); %����С��1��Ϊ�棬ֵΪ1������Ϊ0
+    assess.Groundtruth =  groundTruthOnLabel(param.label(param.num_train+1:end),param.label(1:param.num_train)); %����С��1��Ϊ�棬ֵΪ1������Ϊ0
     % param.Groundtruth =  groundTruthByKNN(param.X(:,param.num_train+1:end),param.X(:,1:param.num_train) ,assess.NN); %����С��1��Ϊ�棬ֵΪ1������Ϊ0
-    assess.Groundtruth =  groundTruthByRandomDistance(param.X(:,param.num_train+1:end), param.X(:,1:param.num_train)); %����С��1��Ϊ�棬ֵΪ1������Ϊ0
+    % assess.Groundtruth =  groundTruthByRandomDistance(param.X(:,param.num_train+1:end), param.X(:,1:param.num_train)); %����С��1��Ϊ�棬ֵΪ1������Ϊ0
 
 % for i=1:assess.length2D
 %     for j = 1:length(assess.hbits)
