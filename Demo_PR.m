@@ -15,9 +15,9 @@ addpath('./utils');
 %        D:dimension of data
 
 %experiment arguments
-assess.dataset = '../Data/YaleB.mat'
+assess.dataset = '../Data/awa4096.mat'
 load(assess.dataset);
-assess.method ={ 'KSH','CCA-ITQ'};%  '2DPCA', '2DLDA', '2DLDA-LDA', 'PCA', 'PCA-LDA', 'Euclidean Distance', 'PCAH',  'BDAH^0', 'BDAH', 'KSH', 'CBE-opt', 'CCA-ITQ'
+assess.method ={ 'BDAH', 'CCA-ITQ', 'LSH'};%  '2DPCA', '2DLDA', '2DLDA-LDA', 'PCA', 'PCA-LDA', 'Euclidean Distance', 'PCAH',  'BDAH^0', 'BDAH', 'KSH', 'CBE-opt', 'CCA-ITQ'
 assess.num_methods = length(assess.method);
 assess.hbits = [16 25 64 100];
 assess.intv = 1; assess.PRline =500;     %PR������ʾ����

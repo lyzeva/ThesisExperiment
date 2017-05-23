@@ -11,7 +11,37 @@ bit = param.bits;
 
 %several state of art methods
 switch(method)
-    
+    case 'BDAH'
+        addpath('./BDAH');
+        X_train = (param.X(:,1:num_train));
+        X_test = (param.X(:,num_train+1:end));
+        label = param.label;
+        n = param.n;
+        m = ceil(dim/n);
+        r = param.r;
+        clear param;
+        
+        %--center the data
+        tic;
+        [R, L] = iterative2DLDA(X_train, label(1:num_train),r,r,n,m);
+        Y1 = zeros(r*r, num_train);
+        for i=1:num_train
+            Y1(:,i) = reshape(L'*reshape(X_train(:,i),n,m)*R, r*r, 1);
+        end
+        [B, U] = ITQ(Y1', 50);
+        B1 =  compactbit(B);
+        training_time = toc
+
+        tic;
+        Y2 = zeros(r*r, num_test);
+        for i=1:num_test
+            Y2(:,i) = reshape(L'*reshape(X_test(:,i),n,m)*R, r*r, 1);
+        end
+        B2 = compactbit(Y2'*U>0);
+        coding_time = toc
+        memory = (length(L(:))+length(R(:))+length(U(:)))*8;
+        Dhamm = hammingDist(B2, B1);
+
      case 'LSH'
         X_train = (param.X(:,1:num_train));
         X_test = (param.X(:,num_train+1:end));

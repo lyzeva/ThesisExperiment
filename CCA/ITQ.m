@@ -1,4 +1,4 @@
-dfunction [B,R] = ITQ(V, n_iter)
+function [B,R] = ITQ(V, n_iter)
 %
 % main function for ITQ which finds a rotation of the PCA embedded data
 % Input:
@@ -25,9 +25,9 @@ n_iter = 50;
 % ITQ to find optimal rotation
 for ITQiter=0:n_iter
     ITQiter
-    Z = V * R;   %锟斤拷锟斤拷锟斤拷锟缴分斤拷锟斤拷投影锟斤拷锟斤拷锟斤拷锟斤拷锟捷碉拷锟劫斤拷锟斤拷锟斤拷转锟戒换      
+    Z = V * R;   %对在主成分进行投影后的所有数据点再进行旋转变换      
     UX = ones(size(Z,1),size(Z,2)).*-1;  
-    UX(Z>=0) = 1;  %UX锟叫碉拷元锟斤拷为1锟斤拷-1
+    UX(Z>=0) = 1;  %UX中的元素为1或-1
     function_value(ITQiter+1) = sum(sum((UX-Z).^2));
     C = UX' * V;
     [UB,sigma,UA] = svd(C);    
