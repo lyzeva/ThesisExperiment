@@ -1,4 +1,4 @@
-dfunction [B,R] = ITQ(V, n_iter)
+function [B,R] = ITQ(V, n_iter)
 %
 % main function for ITQ which finds a rotation of the PCA embedded data
 % Input:
