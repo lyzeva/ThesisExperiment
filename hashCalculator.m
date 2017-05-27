@@ -13,6 +13,7 @@ bit = param.bits;
 switch(method)
     case 'BDAH'
         addpath('./BDAH');
+        addpath('./ITQ');
         X_train = (param.X(:,1:num_train));
         X_test = (param.X(:,num_train+1:end));
         label = param.label;
@@ -205,6 +206,7 @@ switch(method)
 
     case 'CCA-ITQ'
         addpath('./CCA');
+        addpath('./ITQ');
         X_train = (param.X(:,1:num_train))';
         X_test = (param.X(:,num_train+1:end))';
         label = param.label;

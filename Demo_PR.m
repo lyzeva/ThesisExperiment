@@ -17,7 +17,7 @@ addpath('./utils');
 %experiment arguments
 assess.dataset = '../Data/mnist.mat'
 load(assess.dataset);
-assess.method ={'CBE-opt', 'PCA-ITQ', 'LSH'};%  '2DPCA', '2DLDA', '2DLDA-LDA', 'PCA', 'PCA-LDA', 'Euclidean Distance', 'PCAH',  'BDAH^0', 'BDAH', 'KSH', 'CBE-opt', 'CCA-ITQ'
+assess.method ={ 'BDAH', 'CCA-ITQ', 'KSH', 'CBE-opt', 'PCA-ITQ', 'LSH'};%  '2DPCA', '2DLDA', '2DLDA-LDA', 'PCA', 'PCA-LDA', 'Euclidean Distance', 'PCAH',  'BDAH^0', 'BDAH', 'KSH', 'CBE-opt', 'CCA-ITQ'
 assess.num_methods = length(assess.method);
 assess.hbits = [16 25 64 100];
 assess.intv = 1; assess.PRline =500;     %PR������ʾ����
@@ -56,11 +56,11 @@ for loop = 1:assess.loop
             param.bits = assess.hbits(j);
             param.r = sqrt(param.bits);
             param.n = n;
-            [res.Dhamm, res.training_time{j,i},res.coding_time{j,i}] = hashCalculator(param, assess.method{i});
-            [assess.recall{loop}{j,i}, assess.precision{loop}{j,i}, assess.thresh_hball{loop}{j,i}] = recall_precision(assess.Groundtruth, res.Dhamm);
-            [assess.recall_kNN{loop}{j,i}, assess.precision_kNN{loop}{j,i}, assess.thresh_kNN{loop}{j,i}] = recall_precision_kNN(assess.Groundtruth, res.Dhamm, assess.intv, assess.PRline);
+            [res.Dhamm, res.training_time{loop}{j,i},res.coding_time{loop}{j,i}] = hashCalculator(param, assess.method{i});
+            [res.recall{loop}{j,i}, res.precision{loop}{j,i}, res.thresh_hball{loop}{j,i}] = recall_precision(assess.Groundtruth, res.Dhamm);
+            [res.recall_kNN{loop}{j,i}, res.precision_kNN{loop}{j,i}, res.thresh_kNN{loop}{j,i}] = recall_precision_kNN(assess.Groundtruth, res.Dhamm, assess.intv, assess.PRline);
         end
-%         map{j,i} = area_RP(recall{j,i}, precision{j,i});
+        res.map{loop}{j,i} = area_RP(res.recall{loop}{j,i}, res.precision{loop}{j,i});
     end
     
 end
