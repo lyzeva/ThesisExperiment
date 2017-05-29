@@ -6,11 +6,12 @@ linewidth = 1.6;
 title_font_size = xy_font_size;
 
 figure; hold on;
+for loop = 1:assess.loop
 for i = [1:4,6:7]%size(assess.method,2)
     MAP = [];
     for j = 1: length(assess.hbits)
 %         map{j,i} = area_RP(recall{j,i}, precision{j,i});
-        MAP = [MAP, map{j, i}];
+        MAP = [MAP, res.map{loop}{j, i}];
     end
     p = plot(log2(assess.hbits.*assess.hbits), MAP);
     marker=gen_marker(i);
@@ -18,6 +19,7 @@ for i = [1:4,6:7]%size(assess.method,2)
     set(p,'Marker', marker);
     set(p,'LineWidth', line_width);
     set(p,'MarkerSize', marker_size);
+end
 end
 
 h1 = xlabel('Number of bits');

@@ -13,6 +13,7 @@ bit = param.bits;
 switch(method)
     case 'BDAH'
         addpath('./BDAH');
+        addpath('./ITQ');
         X_train = (param.X(:,1:num_train));
         X_test = (param.X(:,num_train+1:end));
         label = param.label;
@@ -158,11 +159,21 @@ switch(method)
 
 
     case 'CBE-opt'
-        addpath('./CBE-opt');
+        addpath('./CBE');
+        X_train = (param.X(:,1:num_train))';
+        X_test = (param.X(:,num_train+1:end))';
+        clear param;
+        
         tic;
         para.bit = bit;
         para.iter = 10;
         train_size = min(num_train, 5000);
+        if (~isfield(para, 'lambda'))
+            para.lambda = 1;
+        end
+        if (~isfield(para, 'verbose'))
+            para.verbose = 0;
+        end        
         [~, model] = circulant_learning(double(X_train(1:train_size, :)), para);
         B1 = CBE_prediction(model, X_train);
         if (para.bit < dim)
@@ -195,6 +206,7 @@ switch(method)
 
     case 'CCA-ITQ'
         addpath('./CCA');
+        addpath('./ITQ');
         X_train = (param.X(:,1:num_train))';
         X_test = (param.X(:,num_train+1:end))';
         label = param.label;

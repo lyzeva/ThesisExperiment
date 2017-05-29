@@ -9,7 +9,7 @@ for j=1:length(assess.hbits)
     bit = assess.hbits(j);
     title([assess.dataset,'@',num2str(bit),'bits']);
     for i= 1:size(assess.method,2)
-        p = plot(assess.recall{loop}{j,i}, assess.precision{loop}{j,i});
+        p = plot(res.recall{loop}{j,i}, res.precision{loop}{j,i});
         set(p,'Color', gen_color(i));
         set(p,'Marker', gen_marker(i));
         set(p,'LineWidth', line_width);
