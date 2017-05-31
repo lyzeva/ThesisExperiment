@@ -15,9 +15,10 @@ addpath('./utils');
 %        D:dimension of data
 
 %experiment arguments
-assess.dataset = '../Data/mnist.mat'
-load(assess.dataset);
-assess.method ={ 'BDAH', 'CCA-ITQ', 'KSH', 'CBE-opt', 'PCA-ITQ', 'LSH'};%  '2DPCA', '2DLDA', '2DLDA-LDA', 'PCA', 'PCA-LDA', 'Euclidean Distance', 'PCAH',  'BDAH^0', 'BDAH', 'KSH', 'CBE-opt', 'CCA-ITQ'
+assess.dataset = 'YaleB'
+load(['../Data/',assess.dataset,'.mat']);
+assess.method = { 'BDAH', 'CCA-ITQ', 'KSH', 'CBE-opt', 'PCA-ITQ', 'LSH'};%  , 'PCAH',  'BDAH^0', 'BDAH', 'KSH', 'CBE-opt', 'CCA-ITQ'
+assess.method = { 'LDA', 'CCA', 'PCA', 'Euclidean Distance'}; % '2DLDA-LDA', '2DLDA',
 assess.num_methods = length(assess.method);
 assess.hbits = [16 25 64 100];
 assess.intv = 1; assess.PRline =500;     %PR������ʾ����
@@ -59,12 +60,12 @@ for loop = 1:assess.loop
             [res.Dhamm, res.training_time{loop}{j,i},res.coding_time{loop}{j,i}] = hashCalculator(param, assess.method{i});
             [res.recall{loop}{j,i}, res.precision{loop}{j,i}, res.thresh_hball{loop}{j,i}] = recall_precision(assess.Groundtruth, res.Dhamm);
             [res.recall_kNN{loop}{j,i}, res.precision_kNN{loop}{j,i}, res.thresh_kNN{loop}{j,i}] = recall_precision_kNN(assess.Groundtruth, res.Dhamm, assess.intv, assess.PRline);
-        end
-        res.map{loop}{j,i} = area_RP(res.recall{loop}{j,i}, res.precision{loop}{j,i});
+            res.map{loop}{j,i} = area_RP(res.recall{loop}{j,i}, res.precision{loop}{j,i});
+       end
     end
-    
 end
 
+save([assess.dataset,'_res.mat'],assess, res);
 % 
 % num_anchor = 1024;
 % param.n = 32;

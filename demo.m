@@ -8,7 +8,7 @@ load([dataset,'.mat']);
 
 hbits = 4; %[4, 8, 10, 14, 16];
 num_test = 662;                % 1000 query test point, rest are database
-intv = 100; PRline = 8457;     %PRÇúÏßÏÔÊ¾³¤¶È
+intv = 100; PRline = 8457;     %PRï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½
 
 X = X';
 ndata = size(X,2);
@@ -21,10 +21,44 @@ end
 
 disp('Calculate groundtruth...');
 Groundtruth =  groundTruthOnLabel(label(num_train+1:end),label(1:num_train));
-%Âú×ãÐ¡ÓÚ1µÄÎªÕæ£¬ÖµÎª1£»·ñÔòÎª0
+%ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½1ï¿½ï¿½Îªï¿½æ£¬ÖµÎª1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îª0
 
     bit = hbits*hbits;
     [Dhamm] = LDA2D(double(X),label,Groundtruth,n,hbits);
     [recall, precision, thresh_hball] = recall_precision(Groundtruth, Dhamm);
     [recall_kNN, precision_kNN, thresh_kNN] = recall_precision_kNN(Groundtruth, Dhamm,intv,PRline);
     map = area_RP(recall, precision);
+    
+    
+    case 'Kernel-ITQ'
+        addpath('./ITQ');
+        tic;
+        [pc, l] = eigs(cov(param.KTrain), bit);%ï¿½ï¿½databaseï¿½Ðµï¿½ï¿½ï¿½Ýµï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½ï¿½î£¬ï¿½ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö½ï¿½ï¿½Ãµï¿½ï¿½ï¿½ï¿½É·ï¿½
+        Y1 = param.KTrain * pc;  %ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ýµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É·ï¿½ï¿½Ï½ï¿½ï¿½ï¿½Í¶Ó°
+        % ITQ
+        [B, R] = ITQ(Y1, 50);   %50Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½RÎªï¿½ï¿½ï¿½50ï¿½Îºï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½
+        B1 = compactbit(B);
+        training_time = toc + param.anchor_traintime;
+        P = pc*R;
+        tic;
+        Y2 = param.KTest*P;      %ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É·Ö½ï¿½ï¿½ï¿½Í¶Ó°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ýµï¿½ï¿½Ù½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ä»»
+        B2 = compactbit(Y2>0);
+        coding_time = toc + param.anchor_testtime;
+        % compute Hamming metric and compute recall precision
+        memory = length(P(:))*8;
+        Dhamm = hammingDist(B2, B1);
+        
+    case 'Kernel-LSH'
+        tic;
+        W = randn(param.num_anchor, bit);
+        Y1 = (param.KTrain*W >= 0);    %Ô­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½Îª0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½0ï¿½ï¿½ï¿½ï¿½Îª1ï¿½ï¿½Ð¡ï¿½ï¿½0ï¿½ï¿½ï¿½ï¿½Îª0
+        B1 = compactbit(Y1);
+        training_time = toc + param.anchor_traintime;
+        tic;
+        Y2 = (param.KTest*W >= 0);
+        B2 = compactbit(Y2);
+        coding_time = toc + param.anchor_testtime;
+        Dhamm = hammingDist(B2, B1);
+        memory = length(W(:))*8;
+        
+        
