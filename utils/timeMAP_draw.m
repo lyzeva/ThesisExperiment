@@ -5,13 +5,14 @@ legend_font_size = 12;
 linewidth = 1.6;
 title_font_size = xy_font_size;
 
+for loop = 1:length(assess.loop)
 figure; hold on;
 for i =  1:size(assess.method,2)
 	time = zeros(1,length(assess.hbits));
     MAP = [];
 	for j= 1:length(assess.hbits)
-		time(j) = coding_time{j,i};
-        MAP = [MAP, map{j, i}];
+		time(j) = res.coding_time{loop}{j,i};
+        MAP = [MAP, res.map{loop}{j, i}];
 	end
     p = plot(time*1000, MAP);
     set(p,'Color', gen_color(i));
@@ -22,6 +23,7 @@ end
 xlabel('Indexing Time (ms)');
 
 	ylabel('mAP');
-	title('MNIST');
+	title(assess.dataset);
 	legend(assess.method);
 	box on; grid on;hold off;
+end

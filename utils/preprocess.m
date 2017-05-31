@@ -14,9 +14,9 @@ for i = 1:size(X,1)
 end
 
 %-- l2 normalization
-for i = 1:size(X,2)
-    X(:,i) = X(:,i)./norm(X(:,i),2);
-end
+%for i = 1:size(X,2)
+%    X(:,i) = X(:,i)./norm(X(:,i),2);
+%end
 
 %-- split up into training arend test set
 R = randperm(ndata);
