@@ -10,15 +10,20 @@ function [R, L]=iterative2DLDA(Trainset, LabelTrain, p, q,r, c)
  % R is the right projected vectors and L is the left projected vectors. 
 
           [m,n]=size(Trainset);
-          ClassNumber=max(LabelTrain);
+          %--calculate M0 and Mi
+          ClassNumber = max(LabelTrain);
+          Mi = zeros(m, ClassNumber);
+          Wi = zeros(ClassNumber,1);
           for i=1:ClassNumber
               temp=find(LabelTrain==i);
-              temp1=temp';
-              Trainset1=Trainset(:,temp1);
-              Mi(:,i)=(mean(Trainset1'))';
+              Wi(i) = length(temp);
+              Trainset1{i}=Trainset(:,temp');
+              Mi(:,i)=mean(Trainset1{i},2);
           end
-          M0=(mean(Trainset'))';
-          R=[eye(q,q); zeros(c-q,q)];%--initialize R
+          M0 = mean(Trainset,2);
+          
+          %--initialize R
+          R=[eye(q,q); zeros(c-q,q)];
           
           iter = 20;
           result = zeros(iter,1);
@@ -31,15 +36,10 @@ function [R, L]=iterative2DLDA(Trainset, LabelTrain, p, q,r, c)
               Sb1=zeros(r,r);
               Sw1=zeros(r,r);
               for i=1:ClassNumber
-                  temp=find(LabelTrain==i);
-                  temp1=temp';
-                  [m1,n1] = size(temp1);
-                  Trainset1=Trainset(:,temp1);
-                  [m2,n2]=size(Trainset1);
-                  for s=1:n2
-                      Sw1=Sw1+(reshape(Trainset1(:,s), r,c)-reshape(Mi(:,i), r,c))*R*R'*(reshape(Trainset1(:,s), r,c)-reshape(Mi(:,i), r,c))';
+                  for s=1:Wi(i)
+                      Sw1=Sw1+(reshape(Trainset1{i}(:,s), r,c)-reshape(Mi(:,i), r,c))*(R*R')*(reshape(Trainset1{i}(:,s), r,c)-reshape(Mi(:,i), r,c))';
                   end
-                  Sb1=Sb1+n1*(reshape(Mi(:,i), r,c)-reshape(M0, r,c))*R*R'*(reshape(Mi(:,i), r,c)-reshape(M0, r,c))';
+                  Sb1=Sb1+Wi(i)*(reshape(Mi(:,i), r,c)-reshape(M0, r,c))*(R*R')*(reshape(Mi(:,i), r,c)-reshape(M0, r,c))';
               end
               % --U=eigendecomposition(sb1,sw1);
               [U,S] =eig(pinv(Sw1)*Sb1);
@@ -51,51 +51,41 @@ function [R, L]=iterative2DLDA(Trainset, LabelTrain, p, q,r, c)
               Sb2=zeros(c,c);
               Sw2=zeros(c,c);
               for i=1:ClassNumber
-                  temp=find(LabelTrain==i);
-                  temp1=temp';
-                  [m1, n1]=size(temp1);
-                  Trainset1=Trainset(:,temp1);
-                  [m2,n2]=size(Trainset1);
-                  for s=1:n2
-                      Sw2=Sw2+(reshape(Trainset1(:,s), r,c)-reshape(Mi(:,i), r,c))'*L*L'*(reshape(Trainset1(:,s), r,c)-reshape(Mi(:,i), r,c));
+                  for s=1:Wi(i)
+                      Sw2=Sw2+(reshape(Trainset1{i}(:,s), r,c)-reshape(Mi(:,i), r,c))'*(L*L')*(reshape(Trainset1{i}(:,s), r,c)-reshape(Mi(:,i), r,c));
                   end
-                  Sb2=Sb2+n1*(reshape(Mi(:,i), r,c)-reshape(M0, r,c))'*L*L'*(reshape(Mi(:,i), r,c)-reshape(M0, r,c));
+                  Sb2=Sb2+Wi(i)*(reshape(Mi(:,i), r,c)-reshape(M0, r,c))'*(L*L')*(reshape(Mi(:,i), r,c)-reshape(M0, r,c));
               end
               % U1=eigendecomposition(sb2,sw2);
               [U1,S1] =eig(pinv(Sw2)*Sb2);
               tt1=diag(S1);
-              [B,IX1]=sort(tt1,'descend');
+              [~,IX1]=sort(tt1,'descend');
               U12=U1(:,IX1);
                   
               R=U12(:,1:q);
 
               for i=1:ClassNumber
-                  temp=find(LabelTrain==i);
-                  temp1=temp';
-                  [m1,n1] = size(temp1);
-                  Trainset1=Trainset(:,temp1);
-                  [m2,n2]=size(Trainset1);
-                  for s=1:n2
-                      DDw = L'*(reshape(Trainset1(:,s), r,c)-reshape(Mi(:,i), r,c))*R;
+                  for s=1:Wi(i)
+                      DDw = L'*(reshape(Trainset1{i}(:,s), r,c)-reshape(Mi(:,i), r,c))*R;
                       Dw(j)=Dw(j)+sum(sum(DDw.*DDw));
                   end
                   DDb = L'*(reshape(Mi(:,i), r,c)-reshape(M0, r,c))*R;
-                  Db(j)=Db(j)+n1*sum(sum(DDb.*DDb));
+                  Db(j)=Db(j)+Wi(i)*sum(sum(DDb.*DDb));
               end
               result(j) = Dw(j)/Db(j);
           end
-% figure;
-% subplot(1,3,1);
-% plot(1:iter, Dw);
-% xlabel('2DLDAiter');
-% ylabel('Dw');
-% subplot(1,3,2);
-% plot(1:iter, Db);
-% xlabel('2DLDAiter');
-% ylabel('Db');
-% subplot(1,3,3);
-% plot(1:iter, result);
-% xlabel('2DLDAiter');
-% ylabel('result');
+figure;
+subplot(1,3,1);
+plot(1:iter, Dw);
+xlabel('2DLDAiter');
+ylabel('Dw');
+subplot(1,3,2);
+plot(1:iter, Db);
+xlabel('2DLDAiter');
+ylabel('Db');
+subplot(1,3,3);
+plot(1:iter, result);
+xlabel('2DLDAiter');
+ylabel('result');
 
                   

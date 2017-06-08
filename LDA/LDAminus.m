@@ -1,4 +1,4 @@
-function [mapping] = lda(X, labels, no_dims)
+function [mapping] = LDAminus(X, labels, no_dims)
 %LDA Perform the LDA algorithm
 %
 %   [mappedX, mapping] = lda(X, labels, no_dims)
@@ -63,7 +63,7 @@ function [mapping] = lda(X, labels, no_dims)
 %     end
 	
 	% Perform eigendecomposition of inv(Sw)*Sb
-    [M, lambda] = eig(Sb, Sw);
+    [M, lambda] = eig(Sw-Sb);
     
     % Sort eigenvalues and eigenvectors in descending order
     lambda(isnan(lambda)) = 0;

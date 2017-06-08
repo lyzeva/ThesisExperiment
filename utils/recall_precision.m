@@ -30,7 +30,7 @@ thresh = 1:intv:max_hamm;
 precision = zeros(length(thresh),1);
 recall = zeros(length(thresh),1);
 
-for n = 1:length(thresh)
+for n = 0:length(thresh)
     j = (Dhat<=((thresh(n)-1)+0.00001));
     
     %exp. # of good pairs that have exactly the same code

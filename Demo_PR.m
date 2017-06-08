@@ -15,13 +15,13 @@ addpath('./utils');
 %        D:dimension of data
 
 %experiment arguments
-assess.dataset = 'YaleB'
+assess.dataset = 'AwA'
 load(['../Data/',assess.dataset,'.mat']);
-assess.method = { 'BDAH', 'CCA-ITQ', 'KSH', 'CBE-opt', 'PCA-ITQ', 'LSH'};%  , 'PCAH',  'BDAH^0', 'BDAH', 'KSH', 'CBE-opt', 'CCA-ITQ'
-assess.method = { 'LDA', 'CCA', 'PCA', 'Euclidean Distance'}; % '2DLDA-LDA', '2DLDA',
+assess.method = { 'BDAH^0', 'BDAH', 'CCA-ITQ', 'KSH', 'PCA-ITQ', 'LSH'};%  , 'PCAH',  'BDAH', 'KSH', 'CBE-opt', 'CCA-ITQ'
+% assess.method = { 'LDA', 'CCA', 'Euclidean Distance'}; % '2DLDA', '2DLDA-LDA'
 assess.num_methods = length(assess.method);
 assess.hbits = [16 25 64 100];
-assess.intv = 1; assess.PRline =500;     %PR������ʾ����
+assess.intv = 1; assess.PRline =500;     %interval and PRline
 assess.loop = 1;
 
 disp('Preprocess the data into normative form..');
@@ -31,13 +31,14 @@ param.num_train = 9000;
 for loop = 1:assess.loop
 
     [param.X, param.num_train, param.label] = preprocess(X, param.num_test, param.num_train, label);
+    clear X;
     % [param.X, param.num_train] = preprocess(X, param.num_test, param.num_train);
 
     disp('Calculate groundtruth...');
-    assess.NN=20;
-    assess.Groundtruth =  groundTruthOnLabel(param.label(param.num_train+1:end),param.label(1:param.num_train)); %����С��1��Ϊ�棬ֵΪ1������Ϊ0
-    % param.Groundtruth =  groundTruthByKNN(param.X(:,param.num_train+1:end),param.X(:,1:param.num_train) ,assess.NN); %����С��1��Ϊ�棬ֵΪ1������Ϊ0
-    % assess.Groundtruth =  groundTruthByRandomDistance(param.X(:,param.num_train+1:end), param.X(:,1:param.num_train)); %����С��1��Ϊ�棬ֵΪ1������Ϊ0
+    assess.Groundtruth =  groundTruthOnLabel(param.label(param.num_train+1:end),param.label(1:param.num_train)); 
+    % assess.NN=20;
+    % param.Groundtruth =  groundTruthByKNN(param.X(:,param.num_train+1:end),param.X(:,1:param.num_train) ,assess.NN); 
+    % assess.Groundtruth =  groundTruthByRandomDistance(param.X(:,param.num_train+1:end), param.X(:,1:param.num_train)); 
 
 % for i=1:assess.length2D
 %     for j = 1:length(assess.hbits)
@@ -59,13 +60,13 @@ for loop = 1:assess.loop
             param.n = n;
             [res.Dhamm, res.training_time{loop}{j,i},res.coding_time{loop}{j,i}] = hashCalculator(param, assess.method{i});
             [res.recall{loop}{j,i}, res.precision{loop}{j,i}, res.thresh_hball{loop}{j,i}] = recall_precision(assess.Groundtruth, res.Dhamm);
-            [res.recall_kNN{loop}{j,i}, res.precision_kNN{loop}{j,i}, res.thresh_kNN{loop}{j,i}] = recall_precision_kNN(assess.Groundtruth, res.Dhamm, assess.intv, assess.PRline);
+%             [res.recall_kNN{loop}{j,i}, res.precision_kNN{loop}{j,i}, res.thresh_kNN{loop}{j,i}] = recall_precision_kNN(assess.Groundtruth, res.Dhamm, assess.intv, assess.PRline);
             res.map{loop}{j,i} = area_RP(res.recall{loop}{j,i}, res.precision{loop}{j,i});
        end
     end
 end
 
-save([assess.dataset,'_res.mat'],assess, res);
+save([assess.dataset,'_res.mat'],'assess', 'res', 'param');
 % 
 % num_anchor = 1024;
 % param.n = 32;

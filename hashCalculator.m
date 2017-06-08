@@ -96,34 +96,15 @@ switch(method)
        B2 = compactbit(reshape((Y2*R>0)',m*r,num_test)');
        coding_time = toc
        Dhamm = hammingDist(B2, B1);
-    case '2DLDAH'
-        tic;
-        %--center the data
-        [R, L] = iterative2DLDA(X(:,1:num_train),label(1:num_train),r,r,n,m);
-        Y1 = zeros(r*r, num_train);
-        Y2 = zeros(r*r, num_test);
-        for i=1:num_train
-            Y1(:,i) = reshape(L'*reshape(X(:,i),n,m)*R, r*r, 1);
-        end
-        B1 = compactbit(Y1'>0);
-        training_time = toc
 
-        tic;
-        for i=1:num_test
-            Y2(:,i) = reshape(L'*reshape(X(:,i+num_train),n,m)*R, r*r, 1);
-        end
-        B2 = compactbit(Y2'>0);
-        coding_time = toc
-        Dhamm = hammingDist(B2, B1);
-
-     case 'LSH'
+    case 'LSH'
         X_train = (param.X(:,1:num_train));
         X_test = (param.X(:,num_train+1:end));
         clear param;
 
         tic;
         W = randn(bit, dim);
-        Y1 = (W*X_train>=0)';    %ԭ������Ļ�����ֵ��Ϊ0������0����Ϊ1��С��0����Ϊ0
+        Y1 = (W*X_train>=0)';    %ԭ������Ļ�����ֵ���?������0����Ϊ1��С��0����Ϊ0
         B1 = compactbit(Y1);
         training_time = toc
         
@@ -145,9 +126,9 @@ switch(method)
         
         % training
         tic;
-        [pc, l] = eigs(cov(X_train), bit);%��database�е���ݵ����Э�����Э������������ֽ��õ����ɷ�
-        Y1 = X_train * pc;  %������ݵ������ɷ��Ͻ���ͶӰ
-        [B, R] = ITQ(Y1, 50);   %50Ϊ������RΪ���50�κ�õ�����ת����
+        [pc, l] = eigs(cov(X_train), bit);%��database�е���ݵ����Э�����Э������������ֽ��õ����ɷ�?
+        Y1 = X_train * pc;  %������ݵ������ɷ��Ͻ���Ͷ�?
+        [B, R] = ITQ(Y1, 50);   %50Ϊ������RΪ���?0�κ�õ�����ת����?
         B1 = compactbit(B);
         P = pc*R; %calculating projection matrix
         training_time = toc        
@@ -268,7 +249,7 @@ switch(method)
         eigenvector = eigenvector(:,1:bit1)*diag(r(1:bit1)); % this performs a scaling using eigenvalues
         Y1 = X_train*eigenvector; % final projection to otain embedding E
         YY1 = randn(num_train,bit2)>0;
-        [B1, R] = ITQ(Y1,50);   %50Ϊ������RΪ���50�κ�õ�����ת����
+        [B1, R] = ITQ(Y1,50);   %50Ϊ������RΪ���?0�κ�õ�����ת����?
         B1 = compactbit([B1,YY1]);
         training_time = toc
         P = eigenvector*R;
@@ -377,19 +358,6 @@ switch(method)
         memory = (length(anchor(:))+length(mvec)+length(A1(:))+1)*8;
         Dhamm = hammingDist(B2,B1);
 
-    case  'PCAH'
-        X_train = (param.X(:,1:num_train))';
-        X_test = (param.X(:,num_train+1:end))';
-        clear param
-        
-        [pc, l] = eigs(cov(X_train),bit);%��database�е���ݵ����Э�����Э������������ֽ��õ����ɷ�
-        tic;
-        X = X * pc;  %������ݵ������ɷ��Ͻ���ͶӰ
-        Y = zeros(size(X));
-        Y(X>=0) = 1;
-        training_time = toc;
-        Y = compactbit(Y>0); 
-        % compute Hamming metric and compute recall precision
     case 'CCA'
         addpath('./CCA');
         X_train = (param.X(:,1:num_train))';
@@ -411,7 +379,35 @@ switch(method)
         Y2 = X_test*eigenvector;
         coding_time = toc
         memory = length(eigenvector(:))*8;
-        Dhamm = disMat(Y2', Y1');
+        Dhamm = distMat(Y2', Y1');
+
+    case '2DLDA'
+        addpath('./BDAH');
+        X_train = (param.X(:,1:num_train));
+        X_test = (param.X(:,num_train+1:end));
+        label = param.label;
+        n = param.n;
+        m = ceil(dim/n);
+        r = param.r;
+        clear param;
+
+        tic;
+        [R, L] = iterative2DLDA(X_train,label(1:num_train),r,r,n,m);
+        Y1 = zeros(r*r, num_train);
+        Y2 = zeros(r*r, num_test);
+        for i=1:num_train
+            Y1(:,i) = reshape(L'*reshape(X_train(:,i),n,m)*R, r*r, 1);
+        end
+        training_time = toc
+
+        tic;
+        for i=1:num_test
+            Y2(:,i) = reshape(L'*reshape(X_test(:,i),n,m)*R, r*r, 1);
+        end
+        coding_time = toc
+        
+        memory = (length(L(:))+length(R(:)))*8;
+        Dhamm = distMat(Y2, Y1);
 
     case 'PCA'
         X_train = (param.X(:,1:num_train))';
@@ -419,41 +415,102 @@ switch(method)
         clear param
       
         tic;
-        [pc, l] = eigs(cov(X_train),bit);%��database�е���ݵ����Э�����Э������������ֽ��õ����ɷ�
+        [pc, l] = eigs(cov(X_train),bit);%��database�е���ݵ����Э�����Э������������ֽ��õ����ɷ�?        
         X_train = X_train * pc;
         training_time = toc
         tic;
-        X_test = X_test * pc;  %������ݵ������ɷ��Ͻ���ͶӰ
+        X_test = X_test * pc;  %������ݵ������ɷ��Ͻ���Ͷ�?        
         coding_time = toc
+        memory = length(pc(:))*8;
         Dhamm = distMat(X_test', X_train');
        
     case 'LDA'
+        addpath('./BDAH');
         X_train = (param.X(:,1:num_train));
         X_test = (param.X(:,num_train+1:end));
         label = param.label;
         clear param
 
         tic;
-        W= (LDA(X_train,label, bit))';
+        W = (LDA(X_train,label(1:num_train), bit))';
         Y1 = W * X_train;
         training_time = toc
         tic;
         Y2 = W * X_test;
         coding_time = toc
+        memory = length(W(:))*8;
         Dhamm = distMat(Y2,Y1);
+        
+    case 'LDAminus'
+        addpath('./LDA');
+        X_train = (param.X(:,1:num_train));
+        X_test = (param.X(:,num_train+1:end));
+        label = param.label;
+        clear param
+
+        tic;
+        W = (LDAminus(X_train,label(1:num_train), bit))';
+        Y1 = W * X_train;
+        training_time = toc
+        tic;
+        Y2 = W * X_test;
+        coding_time = toc
+        memory = length(W(:))*8;
+        Dhamm = distMat(Y2,Y1);
+
     case 'PCA-LDA'
         tic;
-        [pc, l] = eigs(cov(X_train),bit*bit);%��database�е���ݵ����Э�����Э������������ֽ��õ����ɷ�
-        X = X * pc;  %������ݵ������ɷ��Ͻ���ͶӰ
+        [pc, l] = eigs(cov(X_train),bit*bit);
+        X = X * pc;  
         W= LDA(X',label, bit);
         training_time = toc
         tic;
         Y = (X*W)';
         coding_time = toc
-        Dhamm = distMat(Y(:,num_train+1:end),Y(:,1:num_train));     
+        Dhamm = distMat(Y(:,num_train+1:end),Y(:,1:num_train));
+
+    case '2DLDA-LDA'
+        addpath('./BDAH');
+        X_train = (param.X(:,1:num_train));
+        X_test = (param.X(:,num_train+1:end));
+        label = param.label;
+        n = param.n;
+        m = ceil(dim/n);
+        r = param.r;
+        clear param;
+
+        tic;
+        r = 2*r;
+        [R, L] = iterative2DLDA(X_train,label(1:num_train),r,r,n,m);
+        Y1 = zeros(r*r, num_train);
+        for i=1:num_train
+            Y1(:,i) = reshape(L'*reshape(X_train(:,i),n,m)*R, r*r, 1);
+        end
+        r = r/2;
+        W = LDA(Y1, label(1:num_train), r*r);
+        YY1 = W'*Y1;
+        training_time = toc
+        
+        tic;
+        r = 2*r;
+        Y2 = zeros(r*r, num_test);
+        for i=1:num_test
+            Y2(:,i) = reshape(L'*reshape(X_test(:,i),n,m)*R, r*r, 1);
+        end
+        r = r/2;
+        YY2 = W'*Y2;
+        coding_time = toc
+        memory = (length(R(:))+length(L(:))+length(W(:)))*8;
+        Dhamm = distMat(YY2,YY1);  
+        
     case 'Euclidean Distance'
+        X_train = (param.X(:,1:num_train));
+        X_test = (param.X(:,num_train+1:end));
+        clear param
+        
         training_time = 0;
         coding_time = 0;
-        Dhamm = distMat(X_test',X_train');
-end
+        memory = 0;
+        Dhamm = distMat(X_test,X_train);
+    end
 
